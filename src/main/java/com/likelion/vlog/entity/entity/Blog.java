@@ -4,9 +4,10 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
-@Getter
+@Getter @Setter
 @Table(name = "blogs")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Blog extends BaseEntity {
@@ -20,4 +21,15 @@ public class Blog extends BaseEntity {
     private User user;
 
     private String title;
+
+    /**
+     * 블로그 생성 (회원가입 시 자동 생성)
+     * - 기본 타이틀: "{닉네임}의 블로그"
+     */
+    public static Blog create(User user) {
+        Blog blog = new Blog();
+        blog.user = user;
+        blog.title = user.getNickname() + "의 블로그";
+        return blog;
+    }
 }

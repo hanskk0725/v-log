@@ -2,7 +2,7 @@ package com.likelion.vlog.service;
 
 import com.likelion.vlog.dto.user.UserDto;
 import com.likelion.vlog.dto.user.UserUpdateRequestDto;
-import com.likelion.vlog.dto.user.UserUpdateResponseDto;
+
 import com.likelion.vlog.entity.entity.User;
 import com.likelion.vlog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
