@@ -1,6 +1,6 @@
 package com.likelion.vlog.dto.response;
 
-import com.likelion.vlog.entity.entity.Post;
+import com.likelion.vlog.entity.Post;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * 게시글 목록 조회 응답 DTO
  * - 목록에서는 content 대신 summary(100자 요약) 사용
- * - 댓글 목록 대신 commentCount만 포함
+ * - 좋아요/댓글 수는 Sprint 2에서 구현 예정
  */
 @Getter
 @Builder
@@ -20,11 +20,9 @@ public class PostListResponse {
     private String summary;         // content의 앞 100자 + "..."
     private AuthorResponse author;
     private List<String> tags;
-    private int likeCount;
-    private int commentCount;       // 댓글 개수만 표시
     private LocalDateTime createdAt;
 
-    public static PostListResponse of(Post post, List<String> tags, int likeCount, int commentCount) {
+    public static PostListResponse of(Post post, List<String> tags) {
         // content를 100자로 잘라서 summary 생성
         String summary = post.getContent();
         if (summary != null && summary.length() > 100) {
@@ -37,8 +35,6 @@ public class PostListResponse {
                 .summary(summary)
                 .author(AuthorResponse.from(post.getBlog().getUser()))
                 .tags(tags)
-                .likeCount(likeCount)
-                .commentCount(commentCount)
                 .createdAt(post.getCreatedAt())
                 .build();
     }

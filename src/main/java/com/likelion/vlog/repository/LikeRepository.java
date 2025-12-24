@@ -1,8 +1,8 @@
 package com.likelion.vlog.repository;
 
-import com.likelion.vlog.entity.entity.Like;
-import com.likelion.vlog.entity.entity.Post;
-import com.likelion.vlog.entity.entity.User;
+import com.likelion.vlog.entity.Like;
+import com.likelion.vlog.entity.Post;
+import com.likelion.vlog.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

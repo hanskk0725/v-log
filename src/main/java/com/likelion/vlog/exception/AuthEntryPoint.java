@@ -23,7 +23,7 @@ public class AuthEntryPoint implements AuthenticationEntryPoint {
                 {
                     "message": "인증되지 않았습니다.",
                     "status": "401",
-                    "path": "%S",
+                    "path": "%s",
                     "timestamp": "%s"
                 }
                 """,path, currentTimeStamp.toString());

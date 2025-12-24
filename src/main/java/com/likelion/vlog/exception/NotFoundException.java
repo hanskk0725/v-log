@@ -17,6 +17,10 @@ public class NotFoundException extends RuntimeException {
         return new NotFoundException("사용자를 찾을 수 없습니다. id=" + userId);
     }
 
+    public static NotFoundException user(String email) {
+        return new NotFoundException("사용자를 찾을 수 없습니다. email=" + email);
+    }
+
     public static NotFoundException blog(Long userId) {
         return new NotFoundException("블로그를 찾을 수 없습니다. userId=" + userId);
     }

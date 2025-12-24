@@ -1,6 +1,6 @@
 package com.likelion.vlog.dto.response;
 
-import com.likelion.vlog.entity.entity.User;
+import com.likelion.vlog.entity.User;
 import lombok.Builder;
 import lombok.Getter;
 

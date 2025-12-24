@@ -1,6 +1,6 @@
 package com.likelion.vlog.repository;
 
-import com.likelion.vlog.entity.entity.Tag;
+import com.likelion.vlog.entity.Tag;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

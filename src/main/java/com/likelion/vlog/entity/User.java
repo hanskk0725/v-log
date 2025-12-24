@@ -1,4 +1,4 @@
-package com.likelion.vlog.entity.entity;
+package com.likelion.vlog.entity;
 
 import com.likelion.vlog.dto.auth.SignupRequestDto;
 import com.likelion.vlog.dto.user.UserUpdateRequestDto;

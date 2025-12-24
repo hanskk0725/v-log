@@ -1,6 +1,5 @@
 package com.likelion.vlog.controller;
 
-import com.likelion.vlog.config.CustomUserDetails;
 import com.likelion.vlog.dto.request.PostCreateRequest;
 import com.likelion.vlog.dto.request.PostUpdateRequest;
 import com.likelion.vlog.dto.response.PageResponse;
@@ -15,6 +14,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -48,15 +48,10 @@ public class PostController {
     /**
      * 게시글 상세 조회 (GET /api/v1/posts/{postId})
      * - 인증 불필요 (비로그인도 조회 가능)
-     * - 로그인 상태면 좋아요 여부 표시
      */
     @GetMapping("/{postId}")
-    public ResponseEntity<PostResponse> getPost(
-            @PathVariable Long postId,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        Long userId = (userDetails != null) ? userDetails.getUserId() : null;
-        PostResponse response = postService.getPost(postId, userId);
+    public ResponseEntity<PostResponse> getPost(@PathVariable Long postId) {
+        PostResponse response = postService.getPost(postId);
         return ResponseEntity.ok(response);
     }
 
@@ -68,9 +63,9 @@ public class PostController {
     @PostMapping
     public ResponseEntity<PostResponse> createPost(
             @Valid @RequestBody PostCreateRequest request,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        PostResponse response = postService.createPost(request, userDetails.getUserId());
+        PostResponse response = postService.createPost(request, userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -83,9 +78,9 @@ public class PostController {
     public ResponseEntity<PostResponse> updatePost(
             @PathVariable Long postId,
             @Valid @RequestBody PostUpdateRequest request,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        PostResponse response = postService.updatePost(postId, request, userDetails.getUserId());
+        PostResponse response = postService.updatePost(postId, request, userDetails.getUsername());
         return ResponseEntity.ok(response);
     }
 
@@ -98,9 +93,9 @@ public class PostController {
     @DeleteMapping("/{postId}")
     public ResponseEntity<Void> deletePost(
             @PathVariable Long postId,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        postService.deletePost(postId, userDetails.getUserId());
+        postService.deletePost(postId, userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
 }

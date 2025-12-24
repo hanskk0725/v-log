@@ -1,7 +1,7 @@
 package com.likelion.vlog.repository;
 
-import com.likelion.vlog.entity.entity.Post;
-import com.likelion.vlog.entity.entity.TagMap;
+import com.likelion.vlog.entity.Post;
+import com.likelion.vlog.entity.TagMap;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
