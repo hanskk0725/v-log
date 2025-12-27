@@ -35,11 +35,4 @@ out/
 
 ### VS Code ###
 .vscode/
-
-### OS ###
 .DS_Store
-
-CLAUDE.md
-.claude/
-cookies.txt
-nul

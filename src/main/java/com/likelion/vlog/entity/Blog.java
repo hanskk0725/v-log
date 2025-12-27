@@ -1,4 +1,4 @@
-package com.likelion.vlog.entity.entity;
+package com.likelion.vlog.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -6,13 +6,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Getter @Setter
 @Table(name = "blogs")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Blog {
+public class Blog extends BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "blog_id")
@@ -22,12 +20,16 @@ public class Blog {
     @JoinColumn(name = "user_id")
     private User user;
 
-//    @OneToMany(mappedBy = "blog")
-//    private List<Post> posts = new ArrayList<>();
-
     private String title;
 
-    private LocalDateTime created_at;
-    private LocalDateTime updated_at;
-
+    /**
+     * 블로그 생성 (회원가입 시 자동 생성)
+     * - 기본 타이틀: "{닉네임}의 블로그"
+     */
+    public static Blog create(User user) {
+        Blog blog = new Blog();
+        blog.user = user;
+        blog.title = user.getNickname() + "의 블로그";
+        return blog;
+    }
 }
