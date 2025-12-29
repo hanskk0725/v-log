@@ -1,7 +1,7 @@
 package com.likelion.vlog.service;
 
-import com.likelion.vlog.dto.auth.SignupRequestDto;
-import com.likelion.vlog.dto.user.UserDto;
+import com.likelion.vlog.dto.auth.SignupRequest;
+import com.likelion.vlog.dto.users.UserGetResponse;
 import com.likelion.vlog.entity.User;
 import com.likelion.vlog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,19 +31,19 @@ public class AuthService implements UserDetailsService {
     }
 
     @Transactional
-    public UserDto signup(SignupRequestDto dto){
+    public UserGetResponse signup(SignupRequest dto){
         if(userRepository.existsByEmail(dto.getEmail())){
             throw new IllegalArgumentException("이미 존재하는 이메일");
         }
         User user = User.of(dto, passwordEncoder);
         userRepository.save(user);
-        return UserDto.of(user);
+        return UserGetResponse.of(user);
     }
 
-    public UserDto getUserInfo(String email) {
+    public UserGetResponse getUserInfo(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("없는 이메일"));
-        return UserDto.of(user);
+        return UserGetResponse.of(user);
     }
 
     private UserDetails toUserDetail(User user){

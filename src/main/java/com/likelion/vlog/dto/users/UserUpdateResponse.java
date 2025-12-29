@@ -1,4 +1,4 @@
-package com.likelion.vlog.dto.user;
+package com.likelion.vlog.dto.users;
 
 import com.likelion.vlog.entity.User;
 import lombok.AllArgsConstructor;
@@ -8,18 +8,18 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserUpdateResponseDto {
+public class UserUpdateResponse {
     private Long id;
     private String nickname;
     private String email;
 
-    public UserUpdateResponseDto(User user) {
+    public UserUpdateResponse(User user) {
         this.id = user.getId();
         this.nickname = user.getNickname();
         this.email = user.getEmail();
     }
 
-    public static UserUpdateResponseDto of(User user){
-        return  new UserUpdateResponseDto(user.getId(), user.getNickname(), user.getEmail());
+    public static UserUpdateResponse of(User user){
+        return  new UserUpdateResponse(user.getId(), user.getNickname(), user.getEmail());
     }
 }

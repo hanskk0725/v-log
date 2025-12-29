@@ -1,11 +1,11 @@
-package com.likelion.vlog.dto.user;
+package com.likelion.vlog.dto.users;
 
 import com.likelion.vlog.entity.User;
 import lombok.*;
 
 @Getter
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserDto { //유저 상세정보
+public class UserGetResponse { //유저 상세정보
 
     private Long id;
     private String email;
@@ -13,12 +13,12 @@ public class UserDto { //유저 상세정보
     private Long blogId;
     private String blogTitle;
 
-    public static UserDto of(User user){
+    public static UserGetResponse of(User user){
         Long id = user.getId();
         String email = user.getEmail();
         String nickname = user.getNickname();
         Long blogId = user.getBlog().getId();
         String blogTitle = user.getBlog().getTitle();
-        return new UserDto(id, email, nickname, blogId, blogTitle);
+        return new UserGetResponse(id, email, nickname, blogId, blogTitle);
     }
 }

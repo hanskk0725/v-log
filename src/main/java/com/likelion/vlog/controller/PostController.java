@@ -1,10 +1,10 @@
 package com.likelion.vlog.controller;
 
-import com.likelion.vlog.dto.request.PostCreateRequest;
-import com.likelion.vlog.dto.request.PostUpdateRequest;
-import com.likelion.vlog.dto.response.PageResponse;
-import com.likelion.vlog.dto.response.PostListResponse;
-import com.likelion.vlog.dto.response.PostResponse;
+import com.likelion.vlog.dto.posts.PostCreateRequest;
+import com.likelion.vlog.dto.posts.PostUpdateRequest;
+import com.likelion.vlog.dto.posts.response.PageResponse;
+import com.likelion.vlog.dto.posts.response.PostListResponse;
+import com.likelion.vlog.dto.posts.response.PostResponse;
 import com.likelion.vlog.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package com.likelion.vlog.service;
 
-import com.likelion.vlog.dto.request.PostCreateRequest;
-import com.likelion.vlog.dto.request.PostUpdateRequest;
-import com.likelion.vlog.dto.response.PostResponse;
+import com.likelion.vlog.dto.posts.PostCreateRequest;
+import com.likelion.vlog.dto.posts.PostUpdateRequest;
+import com.likelion.vlog.dto.posts.response.PostResponse;
 import com.likelion.vlog.entity.Blog;
 import com.likelion.vlog.entity.Post;
 import com.likelion.vlog.entity.User;

@@ -1,10 +1,10 @@
 package com.likelion.vlog.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.likelion.vlog.dto.request.PostCreateRequest;
-import com.likelion.vlog.dto.request.PostUpdateRequest;
-import com.likelion.vlog.dto.response.AuthorResponse;
-import com.likelion.vlog.dto.response.PostResponse;
+import com.likelion.vlog.dto.posts.PostCreateRequest;
+import com.likelion.vlog.dto.posts.PostUpdateRequest;
+import com.likelion.vlog.dto.posts.response.AuthorResponse;
+import com.likelion.vlog.dto.posts.response.PostResponse;
 import com.likelion.vlog.exception.ForbiddenException;
 import com.likelion.vlog.exception.GlobalExceptionHandler;
 import com.likelion.vlog.exception.NotFoundException;

@@ -1,7 +1,7 @@
 package com.likelion.vlog.service;
 
-import com.likelion.vlog.dto.user.UserDto;
-import com.likelion.vlog.dto.user.UserUpdateRequestDto;
+import com.likelion.vlog.dto.users.UserGetResponse;
+import com.likelion.vlog.dto.users.UserUpdateRequest;
 
 import com.likelion.vlog.entity.User;
 import com.likelion.vlog.repository.UserRepository;
@@ -17,21 +17,21 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserDto getUser(Long userId){
+    public UserGetResponse getUser(Long userId){
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
-        return UserDto.of(user);
+        return UserGetResponse.of(user);
     }
 
     @Transactional
-    public UserDto updateUser(Long userId, UserUpdateRequestDto userUpdateRequestDto) {
+    public UserGetResponse updateUser(Long userId, UserUpdateRequest userUpdateRequest) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
 
-        user.upDateInfo(userUpdateRequestDto, passwordEncoder);
+        user.upDateInfo(userUpdateRequest, passwordEncoder);
 
         userRepository.save(user);
-        return UserDto.of(user);
+        return UserGetResponse.of(user);
     }
 
 

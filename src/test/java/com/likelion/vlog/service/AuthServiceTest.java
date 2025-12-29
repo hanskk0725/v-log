@@ -1,7 +1,7 @@
 package com.likelion.vlog.service;
 
-import com.likelion.vlog.dto.auth.SignupRequestDto;
-import com.likelion.vlog.dto.user.UserDto;
+import com.likelion.vlog.dto.auth.SignupRequest;
+import com.likelion.vlog.dto.users.UserGetResponse;
 import com.likelion.vlog.entity.Blog;
 import com.likelion.vlog.entity.User;
 import com.likelion.vlog.repository.UserRepository;
@@ -22,7 +22,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -46,7 +45,7 @@ class AuthServiceTest {
         @DisplayName("회원가입 성공")
         void signup_Success() {
             // given
-            SignupRequestDto dto = new SignupRequestDto();
+            SignupRequest dto = new SignupRequest();
             ReflectionTestUtils.setField(dto, "email", "test@test.com");
             ReflectionTestUtils.setField(dto, "password", "password123");
             ReflectionTestUtils.setField(dto, "nickname", "테스터");
@@ -71,7 +70,7 @@ class AuthServiceTest {
             });
 
             // when
-            UserDto result = authService.signup(dto);
+            UserGetResponse result = authService.signup(dto);
 
             // then
             assertThat(result.getEmail()).isEqualTo("test@test.com");
@@ -83,7 +82,7 @@ class AuthServiceTest {
         @DisplayName("중복 이메일로 회원가입 시 예외 발생")
         void signup_DuplicateEmail() {
             // given
-            SignupRequestDto dto = new SignupRequestDto();
+            SignupRequest dto = new SignupRequest();
             ReflectionTestUtils.setField(dto, "email", "existing@test.com");
 
             given(userRepository.existsByEmail("existing@test.com")).willReturn(true);
@@ -138,7 +137,7 @@ class AuthServiceTest {
             given(userRepository.findByEmail("test@test.com")).willReturn(Optional.of(user));
 
             // when
-            UserDto result = authService.getUserInfo("test@test.com");
+            UserGetResponse result = authService.getUserInfo("test@test.com");
 
             // then
             assertThat(result.getEmail()).isEqualTo("test@test.com");

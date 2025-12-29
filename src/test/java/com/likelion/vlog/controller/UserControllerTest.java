@@ -1,7 +1,7 @@
 package com.likelion.vlog.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.likelion.vlog.dto.user.UserDto;
+import com.likelion.vlog.dto.users.UserGetResponse;
 import com.likelion.vlog.exception.GlobalExceptionHandler;
 import com.likelion.vlog.exception.NotFoundException;
 import com.likelion.vlog.service.UserService;
@@ -51,8 +51,8 @@ class UserControllerTest {
         @DisplayName("사용자 조회 성공")
         void getUser_Success() throws Exception {
             // given
-            UserDto userDto = createUserDto(1L, "test@test.com", "테스터");
-            given(userService.getUser(1L)).willReturn(userDto);
+            UserGetResponse userGetresponse = createUserDto(1L, "test@test.com", "테스터");
+            given(userService.getUser(1L)).willReturn(userGetresponse);
 
             // when & then
             mockMvc.perform(get("/users/1"))
@@ -85,8 +85,8 @@ class UserControllerTest {
         @DisplayName("사용자 정보 수정 성공")
         void updateUser_Success() throws Exception {
             // given
-            UserDto userDto = createUserDto(1L, "test@test.com", "수정된닉네임");
-            given(userService.updateUser(eq(1L), any())).willReturn(userDto);
+            UserGetResponse userGetresponse = createUserDto(1L, "test@test.com", "수정된닉네임");
+            given(userService.updateUser(eq(1L), any())).willReturn(userGetresponse);
 
             // when & then
             mockMvc.perform(put("/users/1")
@@ -183,10 +183,10 @@ class UserControllerTest {
     }
 
     // 헬퍼 메서드
-    private UserDto createUserDto(Long id, String email, String nickname) {
+    private UserGetResponse createUserDto(Long id, String email, String nickname) {
         try {
-            java.lang.reflect.Constructor<UserDto> constructor =
-                UserDto.class.getDeclaredConstructor(Long.class, String.class, String.class, Long.class, String.class);
+            java.lang.reflect.Constructor<UserGetResponse> constructor =
+                UserGetResponse.class.getDeclaredConstructor(Long.class, String.class, String.class, Long.class, String.class);
             constructor.setAccessible(true);
             return constructor.newInstance(id, email, nickname, 1L, nickname + "의 블로그");
         } catch (Exception e) {

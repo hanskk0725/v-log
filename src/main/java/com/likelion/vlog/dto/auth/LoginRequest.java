@@ -5,8 +5,11 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 
+/**
+ * POST /auth/login 요청 객체
+ */
 @Getter
-public class LoginRequestDto {
+public class LoginRequest {
     @Email
     @NotBlank
     private String email;

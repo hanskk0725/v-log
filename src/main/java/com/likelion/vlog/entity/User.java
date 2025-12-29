@@ -1,7 +1,7 @@
 package com.likelion.vlog.entity;
 
-import com.likelion.vlog.dto.auth.SignupRequestDto;
-import com.likelion.vlog.dto.user.UserUpdateRequestDto;
+import com.likelion.vlog.dto.auth.SignupRequest;
+import com.likelion.vlog.dto.users.UserUpdateRequest;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -47,7 +47,7 @@ public class User {
     }
 
 
-    public void upDateInfo(UserUpdateRequestDto requestDto, PasswordEncoder passwordEncoder){
+    public void upDateInfo(UserUpdateRequest requestDto, PasswordEncoder passwordEncoder){
 
         if (requestDto.getNickname() != null) {
             this.nickname = requestDto.getNickname();
@@ -59,11 +59,11 @@ public class User {
     }
 
 
-    public static User of(SignupRequestDto signupRequestDto, PasswordEncoder passwordEncoder){
+    public static User of(SignupRequest signupRequest, PasswordEncoder passwordEncoder){
         User user = new User();
-        user.setEmail(signupRequestDto.getEmail());
-        user.setPassword(passwordEncoder.encode(signupRequestDto.getPassword()));
-        user.setNickname(signupRequestDto.getNickname());
+        user.setEmail(signupRequest.getEmail());
+        user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
+        user.setNickname(signupRequest.getNickname());
         return user;
     }
 

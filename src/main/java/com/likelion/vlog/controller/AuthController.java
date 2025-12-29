@@ -1,10 +1,10 @@
 package com.likelion.vlog.controller;
 
 
-import com.likelion.vlog.dto.auth.LoginRequestDto;
-import com.likelion.vlog.dto.auth.SignupRequestDto;
+import com.likelion.vlog.dto.auth.LoginRequest;
+import com.likelion.vlog.dto.auth.SignupRequest;
 import com.likelion.vlog.dto.common.ApiResponse;
-import com.likelion.vlog.dto.user.UserDto;
+import com.likelion.vlog.dto.users.UserGetResponse;
 import com.likelion.vlog.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,7 +19,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -30,15 +29,15 @@ public class AuthController {
     private final SecurityContextRepository securityContextRepository;
 
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<UserDto>> signup(@Valid @RequestBody SignupRequestDto dto) {
-        UserDto userDto = authService.signup(dto);
-        return ResponseEntity.ok(ApiResponse.success("회원가입 성공", userDto));
+    public ResponseEntity<ApiResponse<UserGetResponse>> signup(@Valid @RequestBody SignupRequest dto) {
+        UserGetResponse userGetresponse = authService.signup(dto);
+        return ResponseEntity.ok(ApiResponse.success("회원가입 성공", userGetresponse));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<UserDto>> login(@RequestBody LoginRequestDto req,
-                                        HttpServletRequest request,
-                                        HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<UserGetResponse>> login(@RequestBody LoginRequest req,
+                                                              HttpServletRequest request,
+                                                              HttpServletResponse response) {
         // 인증
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword())
