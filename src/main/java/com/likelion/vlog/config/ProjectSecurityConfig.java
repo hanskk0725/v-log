@@ -63,7 +63,7 @@ public class ProjectSecurityConfig {
                         "/api/v1/posts/*/comments/*/replies",    // 답글 생성
                         "/api/v1/posts/*/like",                  // 좋아요
 
-                        "/api/v1/users/*/follow"                 // 팔로우
+                        "/api/v1/users/*/follows"                 // 팔로우
                 ).authenticated()
 
                 .requestMatchers(HttpMethod.PUT,
@@ -80,7 +80,7 @@ public class ProjectSecurityConfig {
                         "/api/v1/posts/*/comments/*/replies/*",  // 답글 삭제 (작성자 검증은 별도)
 
                         "/api/v1/posts/*/like",                  // 좋아요 취소
-                        "/api/v1/users/*/follow"                 // 언팔로우
+                        "/api/v1/users/*/follows"                 // 언팔로우
                 ).authenticated()
 
                 // -------------------------------------------------
