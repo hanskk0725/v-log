@@ -45,13 +45,15 @@ com.likelion.vlog
 │   ├── PostController.java        # 게시글 API (/api/v1/posts)
 │   ├── CommentController.java     # 댓글 API (/api/v1/posts/{postId}/comments)
 │   ├── LikeController.java        # 좋아요 API (/api/v1/posts/{postId}/like)
-│   ├── UserController.java        # 사용자 API (/api/v1/tags/users)
+│   ├── FollowController.java      # 팔로우 API (/api/v1/users/{userId}/follows)
+│   ├── UserController.java        # 사용자 API (/api/v1/tags/users) [경로 수정 필요]
 │   └── TagController.java         # 태그 API (/api/v1/tags)
 ├── service/
 │   ├── AuthService.java           # 인증 + UserDetailsService 구현
 │   ├── PostService.java           # 게시글 CRUD + 태그 관리
 │   ├── CommentService.java        # 댓글/대댓글 CRUD
 │   ├── LikeService.java           # 좋아요 추가/삭제/조회
+│   ├── FollowService.java         # 팔로우/언팔로우
 │   ├── UserService.java           # 사용자 CRUD
 │   └── TagService.java            # 태그 조회
 ├── repository/
@@ -75,8 +77,8 @@ com.likelion.vlog
 │   └── Follow.java                # User-User 팔로우
 ├── dto/
 │   ├── auth/                      # LoginRequest, SignupRequest
-│   ├── posts/                     # PostCreateRequest, PostUpdateRequest
-│   │   └── response/              # PostResponse, PostListResponse, PageResponse 등
+│   ├── posts/                     # PostCreatePostRequest, PostUpdatePutRequest
+│   │                              # PostGetResponse, PostListGetResponse, PageResponse
 │   ├── users/                     # UserGetResponse, UserUpdateRequest 등
 │   ├── comments/                  # 댓글 DTO 10개
 │   │   ├── CommentCreatePostRequest.java
@@ -90,6 +92,7 @@ com.likelion.vlog
 │   │   ├── ReplyPutResponse.java
 │   │   └── ReplyResponse.java
 │   ├── like/                      # LikeResponse
+│   ├── follows/                   # FollowPostResponse, FollowDeleteResponse
 │   ├── tags/                      # TagGetResponse
 │   └── common/                    # ApiResponse
 └── exception/
@@ -118,7 +121,6 @@ User (1) ─── Blog (1) ─── Post (*) ─── TagMap (*) ─── Ta
 
 **Security 설정** (`ProjectSecurityConfig.java`):
 - CSRF 비활성화
-- CORS 활성화 (기본 설정)
 - HttpSessionSecurityContextRepository로 세션 관리
 - DaoAuthenticationProvider + AuthService (UserDetailsService 구현)
 - PasswordEncoder: DelegatingPasswordEncoder (bcrypt 기본)
@@ -144,12 +146,15 @@ API 요청   → SecurityContextRepository [HttpSession에서 Context 복원]
 
 - **BaseEntity 상속**: `createdAt`, `updatedAt` 자동 관리 (JPA Auditing)
 - **@Setter 금지**: 불변성 보장, 명시적 메서드로만 상태 변경
-- **정적 팩토리 메서드**: `create()`, `of()`, `from()`, `createReply()` 등 사용
+- **정적 팩토리 메서드**: `of()`, `from()`, `ofReply()` 사용
 
 ```java
 // 예시
-Post post = Post.create(title, content, blog);
-Comment comment = Comment.createReply(user, post, parentComment, content);
+Post post = Post.of(title, content, blog);
+Comment comment = Comment.of(user, post, content);
+Comment reply = Comment.ofReply(user, post, parentComment, content);
+Tag tag = Tag.of(tagName);
+TagMap tagMap = TagMap.of(post, tag);
 Like like = Like.from(user, post);
 ```
 
@@ -159,7 +164,7 @@ Like like = Like.from(user, post);
 - **예외 처리**: 커스텀 예외만 사용
   - `NotFoundException`: 리소스 없음 (404) - 정적 메서드: `post()`, `user()`, `blog()`
   - `ForbiddenException`: 권한 없음 (403) - 정적 메서드: `postUpdate()`, `postDelete()`
-  - `DuplicateException`: 중복 리소스 (409) - 정적 메서드: `email()`
+  - `DuplicateException`: 중복 리소스 (409) - 정적 메서드: `email()`, `following()`
 - **권한 검증**: Service에서 작성자 확인 후 ForbiddenException 발생
 
 ```java
@@ -171,7 +176,7 @@ if (!post.getBlog().getUser().getEmail().equals(email)) {
 
 ### DTO 구조
 
-**네이밍 규칙** (새 컨벤션):
+**네이밍 규칙**:
 - Request: `{Action}{HttpMethod}Request` (예: `CommentCreatePostRequest`)
 - Response: `{Resource}{HttpMethod}Response` (예: `CommentPostResponse`)
 - 도메인별 하위 패키지 구성: `dto/auth/`, `dto/posts/`, `dto/comments/`, `dto/like/`
@@ -232,7 +237,13 @@ return ResponseEntity.noContent().build();
 | POST | `/` | 좋아요 추가 | O |
 | DELETE | `/` | 좋아요 삭제 | O |
 
-### 사용자 (`/api/v1/tags/users`)
+### 팔로우 (`/api/v1/users/{userId}/follows`)
+| Method | Endpoint | 설명 | 인증 |
+|--------|----------|------|------|
+| POST | `/` | 팔로우 | O |
+| DELETE | `/` | 언팔로우 | O |
+
+### 사용자 (`/api/v1/tags/users`) ⚠️ 경로 수정 필요
 | Method | Endpoint | 설명 | 인증 |
 |--------|----------|------|------|
 | GET | `/{userId}` | 조회 | X |
@@ -249,7 +260,7 @@ return ResponseEntity.noContent().build();
 ### 새 엔티티 추가 시
 1. `BaseEntity` 상속
 2. `@Getter` 사용, `@Setter` 금지
-3. 정적 팩토리 메서드로 생성 (`create()`, `of()`, `from()`)
+3. 정적 팩토리 메서드로 생성 (`of()`, `from()`)
 4. 연관 관계 설정 시 양방향이면 편의 메서드 추가
 
 ### 새 API 엔드포인트 추가 시
@@ -268,40 +279,48 @@ return ResponseEntity.noContent().build();
 
 ### 완료
 - 회원가입/로그인/로그아웃
-- 게시글 CRUD (태그 포함)
+- 게시글 CRUD (태그 포함, ApiResponse 래핑 완료)
 - 사용자 CRUD
 - 태그 조회
 - 댓글/대댓글 CRUD (self-reference 계층 구조)
 - 좋아요 추가/삭제/조회
+- 팔로우/언팔로우
 
-### 미구현 (Sprint 2)
-- 팔로우/언팔로우 (Follow entity만 존재)
+### 미구현
+- 팔로워/팔로잉 목록 조회 API
 
 ## 알려진 이슈 및 TODO
 
 ### Critical
+- [ ] **UserController**: 경로 수정 필요 (`/api/v1/tags/users` → `/api/v1/users`)
 - [ ] **AuthService**: `IllegalArgumentException` → `DuplicateException.email()` 변경
 - [ ] **UserService**: `IllegalArgumentException` → `NotFoundException.user()` 변경
 - [ ] **LikeService**: `IllegalArgumentException`, `IllegalStateException` → 커스텀 예외 변경
 - [ ] **UserController**: 권한 검증 추가 (본인만 수정/삭제)
 
 ### Enhancement
-- [ ] **PostResponse**: `likeCount`, `isLiked` 필드 추가 (현재 별도 API 호출 필요)
-- [ ] **LikeService/LikeController 테스트**: 테스트 코드 작성 필요
-- [ ] **PostController**: ApiResponse 래핑 적용 (현재 직접 DTO 반환)
+- [ ] **PostGetResponse**: `likeCount`, `isLiked` 필드 추가 (현재 별도 API 호출 필요)
 - [ ] **CORS 설정**: 프론트엔드 연결 시 allowedOrigins 등 설정
 - [ ] **Hibernate DDL**: 프로덕션 시 `validate`로 변경
 
 ## 테스트 현황
 
-| 테스트 클래스 | 테스트 수 | 상태 |
-|--------------|----------|------|
-| PostControllerTest | 8 | 통과 |
-| CommentControllerTest | 10 | 통과 |
-| CommentServiceTest | 11 | 통과 |
-| AuthControllerTest | 7 | 실패 (ApiResponse 래핑 이슈) |
-| UserControllerTest | 8 | 실패 (ApiResponse 래핑 이슈) |
-| TagServiceTest | 1 | 실패 (DB 데이터 필요) |
-| VlogApplicationTests | 1 | 통과 |
+| 테스트 클래스 | 설명 | 상태 |
+|--------------|------|------|
+| PostControllerTest | 게시글 컨트롤러 테스트 | 통과 |
+| PostServiceTest | 게시글 서비스 테스트 | 통과 |
+| CommentControllerTest | 댓글 컨트롤러 테스트 | 통과 |
+| CommentServiceTest | 댓글 서비스 테스트 | 통과 |
+| CommentRepositoryTest | 댓글 저장소 테스트 | 일부 실패 (DB 설정) |
+| AuthControllerTest | 인증 컨트롤러 테스트 | 일부 실패 |
+| UserControllerTest | 사용자 컨트롤러 테스트 | 일부 실패 |
+| TagServiceTest | 태그 서비스 테스트 | 실패 (NullPointer) |
+| VlogApplicationTests | 애플리케이션 기본 테스트 | 통과 |
 
-**총 46개 테스트 중 30개 통과**
+```bash
+# 테스트 실행
+./gradlew test
+
+# Post/Comment 관련 테스트만 실행 (안정적)
+./gradlew test --tests "PostControllerTest" --tests "PostServiceTest" --tests "CommentControllerTest" --tests "CommentServiceTest"
+```
