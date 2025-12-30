@@ -1,5 +1,6 @@
 package com.likelion.vlog.service;
 
+import com.likelion.vlog.dto.comments.CommentWithRepliesResponse;
 import com.likelion.vlog.dto.posts.PostCreateRequest;
 import com.likelion.vlog.dto.posts.PostUpdateRequest;
 import com.likelion.vlog.dto.posts.response.PageResponse;
@@ -31,6 +32,7 @@ public class PostService {
     private final TagMapRepository tagMapRepository;
     private final UserRepository userRepository;
     private final BlogRepository blogRepository;
+    private final CommentRepository commentRepository;
 
     /**
      * 게시글 목록 조회 (페이징 + 필터링)
@@ -64,7 +66,7 @@ public class PostService {
 
     /**
      * 게시글 상세 조회
-     * - 좋아요/댓글은 Sprint 3에서 구현 예정
+     * - 댓글/대댓글 포함
      */
     public PostResponse getPost(Long postId) {
         Post post = postRepository.findById(postId)
@@ -72,7 +74,13 @@ public class PostService {
 
         List<String> tags = getTagNames(post);
 
-        return PostResponse.of(post, tags);
+        // 댓글 조회 (대댓글 포함)
+        List<CommentWithRepliesResponse> comments = commentRepository.findAllByPostWithChildren(post)
+                .stream()
+                .map(CommentWithRepliesResponse::from)
+                .toList();
+
+        return PostResponse.of(post, tags, comments);
     }
 
     /**

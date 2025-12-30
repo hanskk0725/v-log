@@ -46,7 +46,6 @@ public class ProjectSecurityConfig {
                                 "/api/v1/tags/auth/signup", //회원가입
                                 "/api/v1/tags/auth/login" //로그인
                         ).permitAll()
-
         //-------------------------------------------------------------------------------------
 
                         // 인증 O

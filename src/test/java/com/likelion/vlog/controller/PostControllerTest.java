@@ -199,6 +199,7 @@ class PostControllerTest {
                         .nickname("테스터")
                         .build())
                 .tags(List.of())
+                .comments(List.of())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
