@@ -119,9 +119,12 @@ User (1) ── (1) Blog (1) ── (*) Post ── (*) TagMap ── (1) Tag
 ### Service 레이어
 - **트랜잭션 전략**: 클래스 레벨에 `@Transactional(readOnly=true)`, 쓰기 메서드만 `@Transactional` 오버라이드
 - **예외 처리**: 커스텀 예외만 사용
-  - `NotFoundException`: 리소스 없음 (404)
-  - `ForbiddenException`: 권한 없음 (403)
-  - `DuplicateException`: 중복 리소스 (409)
+  - `NotFoundException`: 리소스 없음 (404) - 정적 팩토리: `post()`, `user()`, `blog()`, `follow()`, `like()`
+  - `ForbiddenException`: 권한 없음 (403) - 정적 팩토리: `postUpdate()`, `postDelete()`, `userUpdate()`, `userDelete()`
+  - `DuplicateException`: 중복 리소스 (409) - 정적 팩토리: `email()`, `nickname()`, `following()`, `like()`
+  - `InvalidCredentialsException`: 인증 정보 불일치 (401) - 정적 팩토리: `login()`, `password()`
+  - `UnauthorizedException`: 로그인 필요 (401) - 정적 팩토리: `loginRequired()`
+  - `BadRequestException`: 잘못된 요청 (400) - 정적 팩토리: `requiredField()`, `invalidFormat()`, `selfFollow()`
 - **GlobalExceptionHandler**: 전역 예외 처리로 일관된 에러 응답
 
 ### QueryDSL 동적 쿼리 패턴
@@ -167,7 +170,12 @@ DTOs는 도메인별로 하위 패키지 구성:
 ### 새 API 엔드포인트 추가 시
 1. Controller: `@AuthenticationPrincipal UserDetails`로 인증 사용자 받기
 2. Service: `@Transactional(readOnly=true)` 클래스 레벨, 쓰기 메서드에만 `@Transactional`
-3. 예외 처리: `NotFoundException`, `ForbiddenException`, `DuplicateException` 사용
+3. 예외 처리: 커스텀 예외의 정적 팩토리 메서드 사용
+   - 리소스 없음: `NotFoundException.post(id)`, `NotFoundException.user(email)` 등
+   - 중복 데이터: `DuplicateException.email(email)`, `DuplicateException.like()` 등
+   - 권한 없음: `ForbiddenException.postUpdate()`, `ForbiddenException.userDelete()` 등
+   - 인증 실패: `InvalidCredentialsException.password()`, `UnauthorizedException.loginRequired()` 등
+   - 잘못된 요청: `BadRequestException.requiredField(name)`, `BadRequestException.selfFollow()` 등
 4. 권한 검증: Service 레이어에서 작성자 검증 후 `ForbiddenException` 발생
 5. SecurityConfig: `ProjectSecurityConfig`에 엔드포인트 인증 규칙 추가
 
@@ -190,11 +198,26 @@ DTOs는 도메인별로 하위 패키지 구성:
 - **Controller 테스트**: `@WebMvcTest` + MockMvc 사용
 - 총 85개 테스트 존재, 새 기능 추가 시 테스트 작성 필수
 
+## 예외 처리 전략
+
+### HTTP 상태 코드 및 메시지
+프론트엔드 에러 케이스는 `EXCEPTION_CASE.md` 참조. 주요 에러:
+
+- **401 Unauthorized**: 인증 실패 (로그인 불일치, 비회원 접근)
+- **403 Forbidden**: 권한 없음 (타인의 리소스 수정/삭제)
+- **404 Not Found**: 리소스 없음 (삭제된 게시글 등)
+- **409 Conflict**: 중복 리소스 (이메일/닉네임 중복)
+- **500 Internal Server Error**: 서버 내부 오류
+
+### GlobalExceptionHandler 처리 방식
+모든 커스텀 예외는 `GlobalExceptionHandler`에서 일관된 `ErrorResponse` 형식으로 변환되어 반환됩니다.
+
 ## 알려진 이슈 및 TODO
 
 ### Critical
-- [ ] **LikeService**: `IllegalArgumentException`, `IllegalStateException` → 커스텀 예외로 변경
-- [ ] **AuthService/UserService**: `IllegalArgumentException` → 커스텀 예외로 변경
+- [x] **LikeService**: `IllegalArgumentException`, `IllegalStateException` → 커스텀 예외로 변경 완료
+- [x] **AuthService/UserService**: `IllegalArgumentException` → 커스텀 예외로 변경 완료
+- [x] **FollowService**: `IllegalArgumentException` → 커스텀 예외로 변경 완료
 - [ ] **UserController**: 권한 검증 추가 (본인만 수정/삭제)
 - [ ] **User.java**: `BaseEntity` 상속, `@Setter` 제거
 

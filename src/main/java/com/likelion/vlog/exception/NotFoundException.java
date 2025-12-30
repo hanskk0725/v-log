@@ -31,4 +31,8 @@ public class NotFoundException extends RuntimeException {
         return new NotFoundException("팔로우를 찾을 수 없습니다.");
     }
 
+    public static NotFoundException like() {
+        return new NotFoundException("좋아요를 찾을 수 없습니다.");
+    }
+
 }
