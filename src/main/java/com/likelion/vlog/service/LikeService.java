@@ -42,7 +42,8 @@ public class LikeService {
         // 갱신된 Post 조회하여 likeCount 반환
         Post updatedPost = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
-        return new LikeResponse(updatedPost.getLikeCount().longValue(), true);
+
+        return LikeResponse.from(updatedPost.getLikeCount(),true);
     }
 
     // 좋아요 삭제
@@ -61,7 +62,8 @@ public class LikeService {
         // 갱신된 Post 조회하여 likeCount 반환
         Post updatedPost = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
-        return new LikeResponse(updatedPost.getLikeCount().longValue(), false);
+
+        return LikeResponse.from(updatedPost.getLikeCount(), false);
     }
 
     // 좋아요 정보 조회 (로그인 / 비로그인 모두 허용)
@@ -69,21 +71,21 @@ public class LikeService {
     public LikeResponse getLikeInfo(String email, Long postId) {
 
         // 1. 전체 좋아요 수 (항상 조회)
-        long count = likeRepository.countByPostId(postId);
+        int count = postRepository.findById(postId)
+                .map(Post::getLikeCount)
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
 
         // 2. 비로그인 사용자
         if (email == null) {
-            return new LikeResponse(count, false);
+            return LikeResponse.from(count, false);
         }
 
         // 3. 로그인 사용자
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
 
         boolean checkLike = likeRepository.existsByUserIdAndPostId(user.getId(), postId);
-        return new LikeResponse(post.getLikeCount().longValue(), checkLike);
+        return LikeResponse.from(count, checkLike);
     }
 }

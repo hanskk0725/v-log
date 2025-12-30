@@ -22,10 +22,10 @@ class PostServiceTest {
     @Test
     void getPosts() {
         var req = new PostGetRequest();
-        List<String> tags = List.of("java");
+        List<String> tags = List.of("java","security");
         req.setTag(tags);
         req.setSort(SortField.VIEW);
-        req.setTagMode(TagMode.AND);
+
         var page = postService.getPosts(req);
 
         System.out.println("-------------------------------------------------------------------------");
