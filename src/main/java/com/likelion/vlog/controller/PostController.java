@@ -1,10 +1,11 @@
 package com.likelion.vlog.controller;
 
-import com.likelion.vlog.dto.posts.PostCreateRequest;
-import com.likelion.vlog.dto.posts.PostUpdateRequest;
-import com.likelion.vlog.dto.posts.response.PageResponse;
-import com.likelion.vlog.dto.posts.response.PostListResponse;
-import com.likelion.vlog.dto.posts.response.PostResponse;
+import com.likelion.vlog.dto.common.ApiResponse;
+import com.likelion.vlog.dto.posts.PostCreatePostRequest;
+import com.likelion.vlog.dto.posts.PostUpdatePutRequest;
+import com.likelion.vlog.dto.posts.PageResponse;
+import com.likelion.vlog.dto.posts.PostGetResponse;
+import com.likelion.vlog.dto.posts.PostListGetResponse;
 import com.likelion.vlog.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,13 +37,13 @@ public class PostController {
      * - 정렬: 기본값 created_at DESC (최신순)
      */
     @GetMapping
-    public ResponseEntity<PageResponse<PostListResponse>> getPosts(
+    public ResponseEntity<ApiResponse<PageResponse<PostListGetResponse>>> getPosts(
             @RequestParam(required = false) String tag,
             @RequestParam(required = false) Long blogId,
             @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        PageResponse<PostListResponse> response = postService.getPosts(tag, blogId, pageable);
-        return ResponseEntity.ok(response);
+        PageResponse<PostListGetResponse> response = postService.getPosts(tag, blogId, pageable);
+        return ResponseEntity.ok(ApiResponse.success("게시글 목록 조회 성공", response));
     }
 
     /**
@@ -50,9 +51,9 @@ public class PostController {
      * - 인증 불필요 (비로그인도 조회 가능)
      */
     @GetMapping("/{postId}")
-    public ResponseEntity<PostResponse> getPost(@PathVariable Long postId) {
-        PostResponse response = postService.getPost(postId);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<PostGetResponse>> getPost(@PathVariable Long postId) {
+        PostGetResponse response = postService.getPost(postId);
+        return ResponseEntity.ok(ApiResponse.success("게시글 조회 성공", response));
     }
 
     /**
@@ -61,12 +62,12 @@ public class PostController {
      * - 성공 시 201 Created
      */
     @PostMapping
-    public ResponseEntity<PostResponse> createPost(
-            @Valid @RequestBody PostCreateRequest request,
+    public ResponseEntity<ApiResponse<PostGetResponse>> createPost(
+            @Valid @RequestBody PostCreatePostRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        PostResponse response = postService.createPost(request, userDetails.getUsername());
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        PostGetResponse response = postService.createPost(request, userDetails.getUsername());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("게시글 작성 성공", response));
     }
 
     /**
@@ -75,13 +76,13 @@ public class PostController {
      * - 작성자만 수정 가능 (403 Forbidden은 Service에서 처리)
      */
     @PutMapping("/{postId}")
-    public ResponseEntity<PostResponse> updatePost(
+    public ResponseEntity<ApiResponse<PostGetResponse>> updatePost(
             @PathVariable Long postId,
-            @Valid @RequestBody PostUpdateRequest request,
+            @Valid @RequestBody PostUpdatePutRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        PostResponse response = postService.updatePost(postId, request, userDetails.getUsername());
-        return ResponseEntity.ok(response);
+        PostGetResponse response = postService.updatePost(postId, request, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success("게시글 수정 성공", response));
     }
 
     /**

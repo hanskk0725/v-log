@@ -1,10 +1,10 @@
 package com.likelion.vlog.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.likelion.vlog.dto.posts.PostCreateRequest;
-import com.likelion.vlog.dto.posts.PostUpdateRequest;
-import com.likelion.vlog.dto.posts.response.AuthorResponse;
-import com.likelion.vlog.dto.posts.response.PostResponse;
+import com.likelion.vlog.dto.posts.PostCreatePostRequest;
+import com.likelion.vlog.dto.posts.PostUpdatePutRequest;
+import com.likelion.vlog.dto.posts.AuthorResponse;
+import com.likelion.vlog.dto.posts.PostGetResponse;
 import com.likelion.vlog.exception.ForbiddenException;
 import com.likelion.vlog.exception.GlobalExceptionHandler;
 import com.likelion.vlog.exception.NotFoundException;
@@ -61,16 +61,17 @@ class PostControllerTest {
         @DisplayName("게시글 조회 성공")
         void getPost_Success() throws Exception {
             // given
-            PostResponse response = createPostResponse(1L, "테스트 제목", "테스트 내용");
+            PostGetResponse response = createPostGetResponse(1L, "테스트 제목", "테스트 내용");
             given(postService.getPost(1L)).willReturn(response);
 
             // when & then
             mockMvc.perform(get("/api/v1/posts/1"))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.postId").value(1))
-                    .andExpect(jsonPath("$.title").value("테스트 제목"))
-                    .andExpect(jsonPath("$.content").value("테스트 내용"));
+                    .andExpect(jsonPath("$.message").value("게시글 조회 성공"))
+                    .andExpect(jsonPath("$.data.postId").value(1))
+                    .andExpect(jsonPath("$.data.title").value("테스트 제목"))
+                    .andExpect(jsonPath("$.data.content").value("테스트 내용"));
         }
 
         @Test
@@ -95,10 +96,10 @@ class PostControllerTest {
         @DisplayName("게시글 작성 성공")
         void createPost_Success() throws Exception {
             // given
-            PostCreateRequest request = new PostCreateRequest();
-            PostResponse response = createPostResponse(1L, "새 게시글", "새 내용");
+            PostCreatePostRequest request = new PostCreatePostRequest();
+            PostGetResponse response = createPostGetResponse(1L, "새 게시글", "새 내용");
 
-            given(postService.createPost(any(PostCreateRequest.class), eq("test@test.com")))
+            given(postService.createPost(any(PostCreatePostRequest.class), eq("test@test.com")))
                     .willReturn(response);
 
             // when & then
@@ -108,8 +109,9 @@ class PostControllerTest {
                             .content("{\"title\":\"새 게시글\",\"content\":\"새 내용\",\"tags\":[]}"))
                     .andDo(print())
                     .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.postId").value(1))
-                    .andExpect(jsonPath("$.title").value("새 게시글"));
+                    .andExpect(jsonPath("$.message").value("게시글 작성 성공"))
+                    .andExpect(jsonPath("$.data.postId").value(1))
+                    .andExpect(jsonPath("$.data.title").value("새 게시글"));
         }
 
         // Note: 인증 테스트는 Security 필터가 비활성화된 상태에서 테스트 불가
@@ -125,8 +127,8 @@ class PostControllerTest {
         @DisplayName("게시글 수정 성공")
         void updatePost_Success() throws Exception {
             // given
-            PostResponse response = createPostResponse(1L, "수정된 제목", "수정된 내용");
-            given(postService.updatePost(eq(1L), any(PostUpdateRequest.class), eq("test@test.com")))
+            PostGetResponse response = createPostGetResponse(1L, "수정된 제목", "수정된 내용");
+            given(postService.updatePost(eq(1L), any(PostUpdatePutRequest.class), eq("test@test.com")))
                     .willReturn(response);
 
             // when & then
@@ -136,7 +138,8 @@ class PostControllerTest {
                             .content("{\"title\":\"수정된 제목\",\"content\":\"수정된 내용\",\"tags\":[]}"))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.title").value("수정된 제목"));
+                    .andExpect(jsonPath("$.message").value("게시글 수정 성공"))
+                    .andExpect(jsonPath("$.data.title").value("수정된 제목"));
         }
 
         @Test
@@ -144,7 +147,7 @@ class PostControllerTest {
         @DisplayName("작성자가 아닌 사용자가 수정 시 403")
         void updatePost_Forbidden() throws Exception {
             // given
-            given(postService.updatePost(eq(1L), any(PostUpdateRequest.class), eq("other@test.com")))
+            given(postService.updatePost(eq(1L), any(PostUpdatePutRequest.class), eq("other@test.com")))
                     .willThrow(ForbiddenException.postUpdate());
 
             // when & then
@@ -189,8 +192,8 @@ class PostControllerTest {
     }
 
     // 헬퍼 메서드
-    private PostResponse createPostResponse(Long id, String title, String content) {
-        return PostResponse.builder()
+    private PostGetResponse createPostGetResponse(Long id, String title, String content) {
+        return PostGetResponse.builder()
                 .postId(id)
                 .title(title)
                 .content(content)

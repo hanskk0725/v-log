@@ -122,6 +122,134 @@ public class LoginPostRequest {
 
 ---
 
+## 5. LikeService - 커스텀 예외 적용 (필수, 좋아요 담당자)
+
+**현재 상태:**
+```java
+// LikeService.java
+if (user == null) {
+    throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+}
+if (post == null) {
+    throw new IllegalArgumentException("게시글을 찾을 수 없습니다.");
+}
+```
+
+**변경 필요:**
+```java
+// LikeService.java
+User user = userRepository.findByEmail(email)
+    .orElseThrow(() -> NotFoundException.user(email));
+
+Post post = postRepository.findById(postId)
+    .orElseThrow(() -> NotFoundException.post(postId));
+```
+
+**이유:** 프로젝트 컨벤션에 따라 커스텀 예외(`NotFoundException`, `ForbiddenException`)만 사용
+
+---
+
+## 6. AuthService - 커스텀 예외 적용 (필수, 인증 담당자)
+
+**현재 상태:**
+```java
+// AuthService.java - signup 메서드
+if (userRepository.existsByEmail(email)) {
+    throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+}
+```
+
+**변경 필요:**
+```java
+// AuthService.java
+if (userRepository.existsByEmail(email)) {
+    throw DuplicateException.email(email);
+}
+```
+
+**DuplicateException 클래스 (이미 존재하면 사용, 없으면 생성):**
+```java
+// exception/DuplicateException.java
+public class DuplicateException extends RuntimeException {
+    public DuplicateException(String message) {
+        super(message);
+    }
+
+    public static DuplicateException email(String email) {
+        return new DuplicateException("이미 존재하는 이메일입니다: " + email);
+    }
+}
+```
+
+---
+
+## 7. UserService - 커스텀 예외 적용 (필수, 사용자 담당자)
+
+**현재 상태:**
+```java
+// UserService.java
+if (user == null) {
+    throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+}
+
+// 권한 검증
+if (!user.getId().equals(currentUserId)) {
+    throw new IllegalArgumentException("권한이 없습니다.");
+}
+```
+
+**변경 필요:**
+```java
+// UserService.java
+User user = userRepository.findById(userId)
+    .orElseThrow(() -> NotFoundException.user(userId));
+
+// 권한 검증
+if (!user.getId().equals(currentUserId)) {
+    throw new ForbiddenException("사용자 정보 수정 권한이 없습니다.");
+}
+```
+
+---
+
+## 8. UserController - API 경로 수정 (필수, 사용자 담당자)
+
+**현재 상태:**
+```java
+@RestController
+@RequestMapping("/api/v1/tags/users")  // 잘못된 경로
+public class UserController {
+    ...
+}
+```
+
+**변경 필요:**
+```java
+@RestController
+@RequestMapping("/api/v1/users")  // 올바른 경로
+public class UserController {
+    ...
+}
+```
+
+**이유:** `/api/v1/tags/users`는 태그 관련 경로로 오인될 수 있음
+
+---
+
+## 우선순위 정리
+
+| 우선순위 | 항목 | 담당자 | 상태 |
+|---------|------|--------|------|
+| 🔴 Critical | PostController ApiResponse 래핑 | 게시글 담당 | ✅ |
+| 🔴 Critical | LikeService 커스텀 예외 | 좋아요 담당 | ⬜ |
+| 🔴 Critical | AuthService 커스텀 예외 | 인증 담당 | ⬜ |
+| 🔴 Critical | UserService 커스텀 예외 | 사용자 담당 | ⬜ |
+| 🔴 Critical | UserController 경로 수정 | 사용자 담당 | ⬜ |
+| 🟡 권장 | PostResponse likeCount/isLiked 추가 | 좋아요 담당 | ⬜ |
+| 🟢 선택 | DTO 네이밍 통일 | 전체 | ⬜ |
+
+---
+
 ## 질문/문의
 
 댓글 기능 구현 관련 질문은 [담당자]에게 연락 부탁드립니다.

@@ -41,13 +41,17 @@ com.likelion.vlog
 ├── config/
 │   └── ProjectSecurityConfig.java # Spring Security 설정
 ├── controller/
-│   ├── AuthController.java        # 인증 API (/api/v1/tags/auth)
+│   ├── AuthController.java        # 인증 API (/api/v1/auth)
 │   ├── PostController.java        # 게시글 API (/api/v1/posts)
+│   ├── CommentController.java     # 댓글 API (/api/v1/posts/{postId}/comments)
+│   ├── LikeController.java        # 좋아요 API (/api/v1/posts/{postId}/like)
 │   ├── UserController.java        # 사용자 API (/api/v1/tags/users)
 │   └── TagController.java         # 태그 API (/api/v1/tags)
 ├── service/
 │   ├── AuthService.java           # 인증 + UserDetailsService 구현
 │   ├── PostService.java           # 게시글 CRUD + 태그 관리
+│   ├── CommentService.java        # 댓글/대댓글 CRUD
+│   ├── LikeService.java           # 좋아요 추가/삭제/조회
 │   ├── UserService.java           # 사용자 CRUD
 │   └── TagService.java            # 태그 조회
 ├── repository/
@@ -67,13 +71,25 @@ com.likelion.vlog
 │   ├── Comment.java               # self-reference (대댓글 지원)
 │   ├── Tag.java
 │   ├── TagMap.java                # Post-Tag 중간 테이블
-│   ├── Like.java                  # User-Post 좋아요
+│   ├── Like.java                  # User-Post 좋아요 (유니크 제약)
 │   └── Follow.java                # User-User 팔로우
 ├── dto/
 │   ├── auth/                      # LoginRequest, SignupRequest
 │   ├── posts/                     # PostCreateRequest, PostUpdateRequest
 │   │   └── response/              # PostResponse, PostListResponse, PageResponse 등
 │   ├── users/                     # UserGetResponse, UserUpdateRequest 등
+│   ├── comments/                  # 댓글 DTO 10개
+│   │   ├── CommentCreatePostRequest.java
+│   │   ├── CommentUpdatePutRequest.java
+│   │   ├── CommentPostResponse.java
+│   │   ├── CommentPutResponse.java
+│   │   ├── CommentWithRepliesResponse.java
+│   │   ├── ReplyCreatePostRequest.java
+│   │   ├── ReplyUpdatePutRequest.java
+│   │   ├── ReplyPostResponse.java
+│   │   ├── ReplyPutResponse.java
+│   │   └── ReplyResponse.java
+│   ├── like/                      # LikeResponse
 │   ├── tags/                      # TagGetResponse
 │   └── common/                    # ApiResponse
 └── exception/
@@ -128,12 +144,13 @@ API 요청   → SecurityContextRepository [HttpSession에서 Context 복원]
 
 - **BaseEntity 상속**: `createdAt`, `updatedAt` 자동 관리 (JPA Auditing)
 - **@Setter 금지**: 불변성 보장, 명시적 메서드로만 상태 변경
-- **정적 팩토리 메서드**: `create()`, `of()`, `createReply()` 등 사용
+- **정적 팩토리 메서드**: `create()`, `of()`, `from()`, `createReply()` 등 사용
 
 ```java
 // 예시
 Post post = Post.create(title, content, blog);
 Comment comment = Comment.createReply(user, post, parentComment, content);
+Like like = Like.from(user, post);
 ```
 
 ### Service 레이어
@@ -155,15 +172,15 @@ if (!post.getBlog().getUser().getEmail().equals(email)) {
 ### DTO 구조
 
 **네이밍 규칙** (새 컨벤션):
-- Request: `{Resource}{Action}{Method}Request` (예: `PostCreateRequest`)
-- Response: `{Resource}{Method}Response` (예: `UserGetResponse`)
-- 도메인별 하위 패키지 구성: `dto/auth/`, `dto/posts/`, `dto/users/`
+- Request: `{Action}{HttpMethod}Request` (예: `CommentCreatePostRequest`)
+- Response: `{Resource}{HttpMethod}Response` (예: `CommentPostResponse`)
+- 도메인별 하위 패키지 구성: `dto/auth/`, `dto/posts/`, `dto/comments/`, `dto/like/`
 
 **정적 팩토리 메서드**:
 - `from(Entity)`: 타입 변환/매핑
 - `of(값들)`: 값 조립
 
-**API 응답 래핑** (새 컨벤션):
+**API 응답 래핑**:
 ```java
 // 성공 (데이터 있음)
 return ResponseEntity.ok(ApiResponse.success("메시지", data));
@@ -181,7 +198,7 @@ return ResponseEntity.noContent().build();
 
 ## API 엔드포인트
 
-### 인증 (`/api/v1/tags/auth`)
+### 인증 (`/api/v1/auth`)
 | Method | Endpoint | 설명 | 인증 |
 |--------|----------|------|------|
 | POST | `/signup` | 회원가입 (블로그 자동생성) | X |
@@ -192,10 +209,28 @@ return ResponseEntity.noContent().build();
 | Method | Endpoint | 설명 | 인증 |
 |--------|----------|------|------|
 | GET | `/` | 목록 조회 (페이징, 태그/블로그 필터) | X |
-| GET | `/{postId}` | 상세 조회 | X |
+| GET | `/{postId}` | 상세 조회 (댓글 포함) | X |
 | POST | `/` | 작성 | O |
 | PUT | `/{postId}` | 수정 | O (작성자) |
 | DELETE | `/{postId}` | 삭제 | O (작성자) |
+
+### 댓글 (`/api/v1/posts/{postId}/comments`)
+| Method | Endpoint | 설명 | 인증 |
+|--------|----------|------|------|
+| GET | `/` | 댓글 목록 조회 (대댓글 포함) | X |
+| POST | `/` | 댓글 작성 | O |
+| PUT | `/{commentId}` | 댓글 수정 | O (작성자) |
+| DELETE | `/{commentId}` | 댓글 삭제 | O (작성자) |
+| POST | `/{commentId}/replies` | 답글 작성 | O |
+| PUT | `/{commentId}/replies/{replyId}` | 답글 수정 | O (작성자) |
+| DELETE | `/{commentId}/replies/{replyId}` | 답글 삭제 | O (작성자) |
+
+### 좋아요 (`/api/v1/posts/{postId}/like`)
+| Method | Endpoint | 설명 | 인증 |
+|--------|----------|------|------|
+| GET | `/` | 좋아요 정보 조회 (개수 + 현재 사용자 여부) | O |
+| POST | `/` | 좋아요 추가 | O |
+| DELETE | `/` | 좋아요 삭제 | O |
 
 ### 사용자 (`/api/v1/tags/users`)
 | Method | Endpoint | 설명 | 인증 |
@@ -214,7 +249,7 @@ return ResponseEntity.noContent().build();
 ### 새 엔티티 추가 시
 1. `BaseEntity` 상속
 2. `@Getter` 사용, `@Setter` 금지
-3. 정적 팩토리 메서드로 생성 (`create()`, `of()`)
+3. 정적 팩토리 메서드로 생성 (`create()`, `of()`, `from()`)
 4. 연관 관계 설정 시 양방향이면 편의 메서드 추가
 
 ### 새 API 엔드포인트 추가 시
@@ -226,7 +261,7 @@ return ResponseEntity.noContent().build();
 
 ### 테스트 작성
 - **Repository 테스트**: `@DataJpaTest`
-- **Service 테스트**: Mockito로 Repository mocking
+- **Service 테스트**: Mockito로 Repository mocking (`@ExtendWith(MockitoExtension.class)`)
 - **Controller 테스트**: `@WebMvcTest` + MockMvc + `@WithMockUser`
 
 ## 구현 현황
@@ -236,21 +271,37 @@ return ResponseEntity.noContent().build();
 - 게시글 CRUD (태그 포함)
 - 사용자 CRUD
 - 태그 조회
+- 댓글/대댓글 CRUD (self-reference 계층 구조)
+- 좋아요 추가/삭제/조회
 
-### 미구현 (Entity만 존재)
-- 댓글 CRUD (Comment entity 있음, Controller/Service 미구현)
-- 좋아요 (Like entity 있음)
-- 팔로우 (Follow entity 있음)
+### 미구현 (Sprint 2)
+- 팔로우/언팔로우 (Follow entity만 존재)
 
 ## 알려진 이슈 및 TODO
 
 ### Critical
 - [ ] **AuthService**: `IllegalArgumentException` → `DuplicateException.email()` 변경
 - [ ] **UserService**: `IllegalArgumentException` → `NotFoundException.user()` 변경
+- [ ] **LikeService**: `IllegalArgumentException`, `IllegalStateException` → 커스텀 예외 변경
 - [ ] **UserController**: 권한 검증 추가 (본인만 수정/삭제)
-- [ ] **User.java**: `BaseEntity` 상속 필요, `@Setter` 제거
 
 ### Enhancement
+- [ ] **PostResponse**: `likeCount`, `isLiked` 필드 추가 (현재 별도 API 호출 필요)
+- [ ] **LikeService/LikeController 테스트**: 테스트 코드 작성 필요
 - [ ] **PostController**: ApiResponse 래핑 적용 (현재 직접 DTO 반환)
 - [ ] **CORS 설정**: 프론트엔드 연결 시 allowedOrigins 등 설정
 - [ ] **Hibernate DDL**: 프로덕션 시 `validate`로 변경
+
+## 테스트 현황
+
+| 테스트 클래스 | 테스트 수 | 상태 |
+|--------------|----------|------|
+| PostControllerTest | 8 | 통과 |
+| CommentControllerTest | 10 | 통과 |
+| CommentServiceTest | 11 | 통과 |
+| AuthControllerTest | 7 | 실패 (ApiResponse 래핑 이슈) |
+| UserControllerTest | 8 | 실패 (ApiResponse 래핑 이슈) |
+| TagServiceTest | 1 | 실패 (DB 데이터 필요) |
+| VlogApplicationTests | 1 | 통과 |
+
+**총 46개 테스트 중 30개 통과**

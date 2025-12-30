@@ -1,11 +1,11 @@
 package com.likelion.vlog.service;
 
 import com.likelion.vlog.dto.comments.CommentWithRepliesResponse;
-import com.likelion.vlog.dto.posts.PostCreateRequest;
-import com.likelion.vlog.dto.posts.PostUpdateRequest;
-import com.likelion.vlog.dto.posts.response.PageResponse;
-import com.likelion.vlog.dto.posts.response.PostListResponse;
-import com.likelion.vlog.dto.posts.response.PostResponse;
+import com.likelion.vlog.dto.posts.PostCreatePostRequest;
+import com.likelion.vlog.dto.posts.PostUpdatePutRequest;
+import com.likelion.vlog.dto.posts.PageResponse;
+import com.likelion.vlog.dto.posts.PostGetResponse;
+import com.likelion.vlog.dto.posts.PostListGetResponse;
 import com.likelion.vlog.entity.*;
 import com.likelion.vlog.exception.ForbiddenException;
 import com.likelion.vlog.exception.NotFoundException;
@@ -40,7 +40,7 @@ public class PostService {
      * - blogId: 특정 블로그의 게시글만 조회
      * - 둘 다 null이면 전체 조회
      */
-    public PageResponse<PostListResponse> getPosts(String tag, Long blogId, Pageable pageable) {
+    public PageResponse<PostListGetResponse> getPosts(String tag, Long blogId, Pageable pageable) {
         Page<Post> postPage;
 
         // 필터 조건에 따라 다른 쿼리 실행
@@ -57,8 +57,8 @@ public class PostService {
         List<Post> posts = postPage.getContent();
 
         // Entity -> DTO 변환
-        List<PostListResponse> content = posts.stream()
-                .map(PostListResponse::of)
+        List<PostListGetResponse> content = posts.stream()
+                .map(PostListGetResponse::of)
                 .toList();
 
         return PageResponse.of(postPage, content);
@@ -68,7 +68,7 @@ public class PostService {
      * 게시글 상세 조회
      * - 댓글/대댓글 포함
      */
-    public PostResponse getPost(Long postId) {
+    public PostGetResponse getPost(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> NotFoundException.post(postId));
 
@@ -80,7 +80,7 @@ public class PostService {
                 .map(CommentWithRepliesResponse::from)
                 .toList();
 
-        return PostResponse.of(post, tags, comments);
+        return PostGetResponse.of(post, tags, comments);
     }
 
     /**
@@ -89,7 +89,7 @@ public class PostService {
      * - 태그가 있으면 자동 생성/매핑
      */
     @Transactional
-    public PostResponse createPost(PostCreateRequest request, String email) {
+    public PostGetResponse createPost(PostCreatePostRequest request, String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> NotFoundException.user(email));
 
@@ -103,7 +103,7 @@ public class PostService {
         // 태그 저장 (없는 태그는 새로 생성)
         List<String> tagNames = saveTags(savedPost, request.getTags());
 
-        return PostResponse.of(savedPost, tagNames);
+        return PostGetResponse.of(savedPost, tagNames);
     }
 
     /**
@@ -112,7 +112,7 @@ public class PostService {
      * - 기존 태그 삭제 후 새로 저장
      */
     @Transactional
-    public PostResponse updatePost(Long postId, PostUpdateRequest request, String email) {
+    public PostGetResponse updatePost(Long postId, PostUpdatePutRequest request, String email) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> NotFoundException.post(postId));
 
@@ -127,7 +127,7 @@ public class PostService {
         tagMapRepository.deleteAllByPost(post);
         List<String> tagNames = saveTags(post, request.getTags());
 
-        return PostResponse.of(post, tagNames);
+        return PostGetResponse.of(post, tagNames);
     }
 
     /**

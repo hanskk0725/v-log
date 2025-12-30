@@ -1,4 +1,4 @@
-package com.likelion.vlog.dto.posts.response;
+package com.likelion.vlog.dto.posts;
 
 import com.likelion.vlog.entity.Post;
 import lombok.Builder;
@@ -7,22 +7,19 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 /**
- * 게시글 목록 조회 응답 DTO
- * - 목록에서는 content 대신 summary(100자 요약) 사용
- * - 좋아요/댓글 수는 Sprint 2에서 구현 예정
+ * GET /api/v1/posts 응답 객체 (목록 조회)
  */
 @Getter
 @Builder
-public class PostListResponse {
+public class PostListGetResponse {
     private Long postId;
     private String title;
     private String content;
     private AuthorResponse author;
     private LocalDateTime createdAt;
 
-    public static PostListResponse of(Post post) {
-
-        return PostListResponse.builder()
+    public static PostListGetResponse of(Post post) {
+        return PostListGetResponse.builder()
                 .postId(post.getId())
                 .title(post.getTitle())
                 .content(post.getContent())

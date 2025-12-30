@@ -2,7 +2,7 @@ package com.likelion.vlog.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.likelion.vlog.dto.comments.*;
-import com.likelion.vlog.dto.posts.response.AuthorResponse;
+import com.likelion.vlog.dto.posts.AuthorResponse;
 import com.likelion.vlog.exception.ForbiddenException;
 import com.likelion.vlog.exception.GlobalExceptionHandler;
 import com.likelion.vlog.exception.NotFoundException;
