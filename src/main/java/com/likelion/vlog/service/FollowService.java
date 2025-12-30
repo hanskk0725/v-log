@@ -6,6 +6,7 @@ import com.likelion.vlog.dto.follows.FollowDeleteResponse;
 import com.likelion.vlog.dto.follows.FollowPostResponse;
 import com.likelion.vlog.entity.Follow;
 import com.likelion.vlog.entity.User;
+import com.likelion.vlog.exception.BadRequestException;
 import com.likelion.vlog.exception.DuplicateException;
 import com.likelion.vlog.exception.NotFoundException;
 import com.likelion.vlog.repository.FollowRepository;
@@ -41,7 +42,7 @@ public class FollowService {
 
         // 자기 자신을 팔로우할 수 없음
         if (follower.getId().equals(following.getId())) {
-            throw new IllegalArgumentException("자기 자신을 팔로우할 수 없습니다.");
+            throw BadRequestException.selfFollow();
         }
 
         // 이미 팔로우 중인지 확인
