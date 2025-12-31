@@ -6,6 +6,8 @@ import com.likelion.vlog.dto.users.UserUpdateRequest;
 import com.likelion.vlog.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,15 +17,23 @@ public class UserController {
     private final UserService userService;
 
     @PutMapping("/{user_id}")
-    public ResponseEntity<ApiResponse<UserGetResponse>> updateUser(@PathVariable("user_id") Long userId, @RequestBody UserUpdateRequest userUpdateRequest) {
+    public ResponseEntity<ApiResponse<UserGetResponse>> updateUser(
+            @PathVariable("user_id") Long userId,
+            @RequestBody UserUpdateRequest userUpdateRequest,
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        return ResponseEntity.ok(ApiResponse.success("회원정보 수정 성공", userService.updateUser(userId, userUpdateRequest)));
+        String email = userDetails.getUsername();
+        return ResponseEntity.ok(ApiResponse.success("회원정보 수정 성공", userService.updateUser(userId, userUpdateRequest, email)));
     }
 
     @DeleteMapping("/{user_id}")
-    public ResponseEntity<ApiResponse<String>> deleteUser(@PathVariable("user_id") Long userId, @RequestBody UserUpdateRequest userUpdateRequest) {
+    public ResponseEntity<ApiResponse<String>> deleteUser(
+            @PathVariable("user_id") Long userId,
+            @RequestBody UserUpdateRequest userUpdateRequest,
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        userService.deleteUser(userId, userUpdateRequest.getPassword());
+        String email = userDetails.getUsername();
+        userService.deleteUser(userId, userUpdateRequest.getPassword(), email);
         return ResponseEntity.ok(ApiResponse.success("회원탈퇴 성공"));
     }
 

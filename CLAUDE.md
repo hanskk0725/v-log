@@ -234,8 +234,8 @@ DTOs는 도메인별로 하위 패키지 구성:
 - [x] **LikeService**: `IllegalArgumentException`, `IllegalStateException` → 커스텀 예외로 변경 완료
 - [x] **AuthService/UserService**: `IllegalArgumentException` → 커스텀 예외로 변경 완료
 - [x] **FollowService**: `IllegalArgumentException` → 커스텀 예외로 변경 완료
+- [x] **User.java**: `BaseEntity` 상속 완료, `@Setter` 제거 완료
 - [ ] **UserController**: 권한 검증 추가 (본인만 수정/삭제)
-- [ ] **User.java**: `BaseEntity` 상속, `@Setter` 제거
 
 ### Enhancement
 - [ ] **팔로우 기능**: FollowController, FollowService 구현
